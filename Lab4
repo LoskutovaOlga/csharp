@@ -1,0 +1,643 @@
+Form1.cs
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+using System.Diagnostics;
+using System.Threading;
+
+namespace SortSpeedDemo
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private int[] array, array_saved;
+        private int globalN = 50, globalSize = 1000;
+        Stopwatch time = new Stopwatch();
+        Random R = new Random();
+
+        private void Log(string text, int[] a)
+        {
+            string temp_text = "\r\n" + text + ":\r\n";
+            for (int i = 0; i < a.Length; i++)
+                temp_text += a[i].ToString() + ' ';
+
+            textBoxLog.Text += temp_text;         
+            textBoxLog.Update();
+            textBoxLog.Refresh();
+            progressBar1.Value = 0;
+        }
+
+        private void Log(string text)
+        {
+            textBoxLog.Text += "\r\n" + text;
+            textBoxLog.Update();
+            textBoxLog.Refresh();
+            progressBar1.Value = 0;
+        }
+        
+        private void TestStart()
+        {
+            progressBar1.Maximum = globalN;         
+            time.Reset();
+            Log("Тестирование...");
+            time.Start();
+        }
+
+        private void TestFinish(TextBox box)
+        {
+            time.Stop();
+            progressBar1.Value = 0;
+
+            box.Text = "Общее время: ";
+            if (time.Elapsed.TotalSeconds >= 1)
+                box.Text += (int)time.Elapsed.TotalSeconds + " с ";
+            box.Text +=  time.Elapsed.Milliseconds + " мс " +
+                ((int)(time.Elapsed.TotalMilliseconds * 1000)) % 1000 + " мкс";
+        }
+
+        private void TestGen(bool sorted = false)
+        {
+            time.Stop();
+           
+            array = new int[globalSize];
+            array_saved = new int[globalSize];
+            for (int i = 0; i < globalSize; i++)
+                if (checkBoxSmallTests.Checked)
+                    array[i] = R.Next(100);
+                else
+                    array[i] = R.Next(Int32.MaxValue);
+            Array.Copy(array, array_saved, array.Length);
+            progressBar1.Value++;
+
+            if (sorted)
+                Array.Sort(array);
+
+            time.Start();
+        }
+
+        private void QuickSortInner(int l, int r)
+        {
+            if (r - l <= 1)
+                return;
+
+            int i = l, j = r - 1;
+            int pivot = array[(i+j)/2];
+
+            while (i < j)
+            {
+                while (i <= j && array[i] < pivot)
+                    i++;
+                while (i <= j && array[j] > pivot)
+                    j--;
+                if (i >= j)
+                    break;
+                int TEMP = array[i];
+                array[i] = array[j];
+                array[j] = TEMP;
+                j--;
+            }
+
+            if (l < i)
+                QuickSortInner(l, i);
+            if (j < r)
+                QuickSortInner(j+1, r);
+        }
+
+        private void QuickSort()
+        {
+            TestStart();
+            for (int n = 0; n < globalN; n++)
+            {
+                TestGen();
+                QuickSortInner(0, globalSize);
+            }
+            TestFinish(textBox1);
+
+            if (checkBoxSample.Checked)
+            {
+                Log("Первоначальный массив", array_saved);
+                Log("Отсортированный массив", array);
+            }
+        }
+   
+        private void BubbleSort()
+        {
+            TestStart();
+            for (int n = 0; n < globalN; n++)
+            {
+                TestGen();
+                for (int i = 0; i < globalSize; i++)
+                    for (int j = i; j < globalSize; j++)
+                        if (array[i] > array[j])
+                        {
+                            int TEMP = array[i];
+                            array[i] = array[j];
+                            array[j] = TEMP;
+                        }
+            }
+            TestFinish(textBox2);
+
+            if (checkBoxSample.Checked)
+            {
+                Log("Первоначальный массив", array_saved);
+                Log("Отсортированный массив", array);
+            }
+        }
+
+        private void LiniarSearch()
+        {
+            int item = 0, pos = 0;
+
+            TestStart();
+            for (int n = 0; n < globalN; n++)
+            {
+                TestGen();
+                item = array[R.Next(globalSize)];
+
+                for (int i = 0; i < globalSize; i++)
+                    if (array[i] == item)
+                    {
+                        pos = i;
+                        break;
+                    }
+            }
+            TestFinish(textBox3);
+
+            if (checkBoxSample.Checked)
+            {
+                Log("Массив", array);
+                Log("Поиск элемента: " + item.ToString() + " Найден по номеру: " + (pos + 1).ToString());
+            }
+        }
+
+        private void BinarySearch()
+        {
+            int item = 0, pos = 0;
+
+            TestStart();
+            for (int n = 0; n < globalN; n++)
+            {
+                TestGen(true);
+                item = array[R.Next(globalSize)];
+
+                int l = 0, r = globalSize - 1, mid;
+                while (l<=r)
+                {
+                    mid = (l + r) / 2;
+                    if (item < array[mid])
+                        r = mid - 1;
+                    else if (item > array[mid])
+                        l = mid + 1;
+                    else
+                    {
+                        pos = mid;
+                        break;
+                    }
+                }
+            }
+            TestFinish(textBox4);
+
+            if (checkBoxSample.Checked)
+            {
+                Log("Массив", array);
+                Log("Поиск элемента: " + item.ToString() + " Найден по номеру: " + (pos+1).ToString());
+            }
+        }
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxSize_Leave(null, null);
+            textBoxN_Leave(null, null);
+
+            Button B = sender as Button;       
+            TestGen();
+
+            switch (B.TabIndex)
+            {
+                case 3:
+                    QuickSort();
+                    break;
+                case 4:
+                    BubbleSort();
+                    break;
+                case 5:
+                    LiniarSearch();
+                    break;
+                case 6:
+                    BinarySearch();
+                    break;
+            }
+            
+        }
+
+        private void textBoxSize_Leave(object sender, EventArgs e)
+        {
+            bool success = Int32.TryParse(textBoxSize.Text, out globalSize);
+            if (!success || globalSize < 0)
+            {
+                textBoxSize.Text = "1";
+                globalSize = 1;
+            }
+        }
+
+        private void textBoxN_Leave(object sender, EventArgs e)
+        {
+            bool success = Int32.TryParse(textBoxN.Text, out globalN);
+            if (!success || globalN < 0)
+            {
+                textBoxN.Text = "1";
+                globalN = 1;
+            }
+        }
+    }
+}
+
+
+Form1.Designer.cs
+
+namespace SortSpeedDemo
+{
+    partial class Form1
+    {
+        /// <summary>
+        /// Обязательная переменная конструктора.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Освободить все используемые ресурсы.
+        /// </summary>
+        /// <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Код, автоматически созданный конструктором форм Windows
+
+        /// <summary>
+        /// Требуемый метод для поддержки конструктора — не изменяйте 
+        /// содержимое этого метода с помощью редактора кода.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.checkBoxSample = new System.Windows.Forms.CheckBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.textBox4 = new System.Windows.Forms.TextBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.button4 = new System.Windows.Forms.Button();
+            this.label6 = new System.Windows.Forms.Label();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.button3 = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.button2 = new System.Windows.Forms.Button();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textBoxN = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.textBoxSize = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.textBoxLog = new System.Windows.Forms.TextBox();
+            this.label14 = new System.Windows.Forms.Label();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.checkBoxSmallTests = new System.Windows.Forms.CheckBox();
+            this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.checkBoxSmallTests);
+            this.groupBox1.Controls.Add(this.checkBoxSample);
+            this.groupBox1.Controls.Add(this.label7);
+            this.groupBox1.Controls.Add(this.textBox4);
+            this.groupBox1.Controls.Add(this.textBox1);
+            this.groupBox1.Controls.Add(this.button4);
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.textBox3);
+            this.groupBox1.Controls.Add(this.button3);
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.textBox2);
+            this.groupBox1.Controls.Add(this.button2);
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.textBoxN);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.textBoxSize);
+            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.button1);
+            this.groupBox1.Location = new System.Drawing.Point(12, 12);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(260, 312);
+            this.groupBox1.TabIndex = 0;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Тестирование";
+            // 
+            // checkBoxSample
+            // 
+            this.checkBoxSample.AutoSize = true;
+            this.checkBoxSample.Location = new System.Drawing.Point(9, 287);
+            this.checkBoxSample.Name = "checkBoxSample";
+            this.checkBoxSample.Size = new System.Drawing.Size(117, 17);
+            this.checkBoxSample.TabIndex = 15;
+            this.checkBoxSample.Text = "Выводить пример";
+            this.checkBoxSample.UseVisualStyleBackColor = true;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(42, 227);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(136, 13);
+            this.label7.TabIndex = 14;
+            this.label7.Text = "Бинарный поиск - O(logN)";
+            // 
+            // textBox4
+            // 
+            this.textBox4.Location = new System.Drawing.Point(45, 243);
+            this.textBox4.Multiline = true;
+            this.textBox4.Name = "textBox4";
+            this.textBox4.ReadOnly = true;
+            this.textBox4.Size = new System.Drawing.Size(206, 33);
+            this.textBox4.TabIndex = 10;
+            // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(45, 78);
+            this.textBox1.Multiline = true;
+            this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
+            this.textBox1.Size = new System.Drawing.Size(206, 33);
+            this.textBox1.TabIndex = 7;
+            this.textBox1.Text = "\r\n";
+            // 
+            // button4
+            // 
+            this.button4.Font = new System.Drawing.Font("Webdings", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
+            this.button4.Location = new System.Drawing.Point(9, 227);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(30, 49);
+            this.button4.TabIndex = 6;
+            this.button4.Text = "4";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button_Click);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(42, 172);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(123, 13);
+            this.label6.TabIndex = 11;
+            this.label6.Text = "Линейный поиск - O(N)";
+            // 
+            // textBox3
+            // 
+            this.textBox3.Location = new System.Drawing.Point(45, 188);
+            this.textBox3.Multiline = true;
+            this.textBox3.Name = "textBox3";
+            this.textBox3.ReadOnly = true;
+            this.textBox3.Size = new System.Drawing.Size(206, 33);
+            this.textBox3.TabIndex = 9;
+            // 
+            // button3
+            // 
+            this.button3.Font = new System.Drawing.Font("Webdings", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
+            this.button3.Location = new System.Drawing.Point(9, 172);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(30, 49);
+            this.button3.TabIndex = 5;
+            this.button3.Text = "4";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button_Click);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(42, 117);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(160, 13);
+            this.label5.TabIndex = 8;
+            this.label5.Text = "Сортировку пузырьком - O(N²)";
+            // 
+            // textBox2
+            // 
+            this.textBox2.Location = new System.Drawing.Point(45, 133);
+            this.textBox2.Multiline = true;
+            this.textBox2.Name = "textBox2";
+            this.textBox2.ReadOnly = true;
+            this.textBox2.Size = new System.Drawing.Size(206, 33);
+            this.textBox2.TabIndex = 8;
+            // 
+            // button2
+            // 
+            this.button2.Font = new System.Drawing.Font("Webdings", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
+            this.button2.Location = new System.Drawing.Point(9, 117);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(30, 49);
+            this.button2.TabIndex = 4;
+            this.button2.Text = "4";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button_Click);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(42, 62);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(166, 13);
+            this.label4.TabIndex = 1;
+            this.label4.Text = "Быстрая сортировка - O(NlogN)";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(129, 20);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(89, 13);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Число проходов";
+            // 
+            // textBoxN
+            // 
+            this.textBoxN.Location = new System.Drawing.Point(132, 36);
+            this.textBoxN.MaxLength = 12;
+            this.textBoxN.Name = "textBoxN";
+            this.textBoxN.Size = new System.Drawing.Size(119, 20);
+            this.textBoxN.TabIndex = 2;
+            this.textBoxN.Text = "50";
+            this.textBoxN.Leave += new System.EventHandler(this.textBoxN_Leave);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(6, 20);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(99, 13);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "Размер массивов";
+            // 
+            // textBoxSize
+            // 
+            this.textBoxSize.Location = new System.Drawing.Point(9, 36);
+            this.textBoxSize.MaxLength = 12;
+            this.textBoxSize.Name = "textBoxSize";
+            this.textBoxSize.Size = new System.Drawing.Size(119, 20);
+            this.textBoxSize.TabIndex = 1;
+            this.textBoxSize.Text = "1000";
+            this.textBoxSize.Leave += new System.EventHandler(this.textBoxSize_Leave);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 59);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(0, 13);
+            this.label1.TabIndex = 1;
+            // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Webdings", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(2)));
+            this.button1.Location = new System.Drawing.Point(9, 62);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(30, 49);
+            this.button1.TabIndex = 3;
+            this.button1.Text = "4";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button_Click);
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.progressBar1);
+            this.groupBox2.Controls.Add(this.textBoxLog);
+            this.groupBox2.Controls.Add(this.label14);
+            this.groupBox2.Location = new System.Drawing.Point(278, 15);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(390, 307);
+            this.groupBox2.TabIndex = 1;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Лог";
+            // 
+            // textBoxLog
+            // 
+            this.textBoxLog.Dock = System.Windows.Forms.DockStyle.Top;
+            this.textBoxLog.Location = new System.Drawing.Point(3, 16);
+            this.textBoxLog.Multiline = true;
+            this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxLog.Size = new System.Drawing.Size(384, 285);
+            this.textBoxLog.TabIndex = 11;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(6, 59);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(0, 13);
+            this.label14.TabIndex = 1;
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar1.Location = new System.Drawing.Point(3, 286);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(384, 18);
+            this.progressBar1.Step = 1;
+            this.progressBar1.TabIndex = 12;
+            // 
+            // checkBoxSmallTests
+            // 
+            this.checkBoxSmallTests.AutoSize = true;
+            this.checkBoxSmallTests.Location = new System.Drawing.Point(132, 287);
+            this.checkBoxSmallTests.Name = "checkBoxSmallTests";
+            this.checkBoxSmallTests.Size = new System.Drawing.Size(111, 17);
+            this.checkBoxSmallTests.TabIndex = 16;
+            this.checkBoxSmallTests.Text = "Тесты от 0 до 99";
+            this.checkBoxSmallTests.UseVisualStyleBackColor = true;
+            // 
+            // Form1
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(680, 336);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.groupBox1);
+            this.Name = "Form1";
+            this.Text = "Form1";
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textBoxN;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox textBoxSize;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.TextBox textBoxLog;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.CheckBox checkBoxSample;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.CheckBox checkBoxSmallTests;
+    }
+}
+
+
+Program.cs
+
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+
+namespace SortSpeedDemo
+{
+    static class Program
+    {
+        /// <summary>
+        /// Главная точка входа для приложения.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
+        }
+    }
+}
