@@ -1,0 +1,244 @@
+Form1.cs
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+
+namespace TranspositionCipherWithKey
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        // Событие на нажатие любой кнопки
+        private void button_Click(object sender, EventArgs e)
+        {
+            // Сообщение об ошибке, если нет ключа
+            if (textBoxKey.Text == "")
+            {
+                MessageBox.Show("Введите ключ!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (textBoxIn.Text == "")
+            {
+                MessageBox.Show("Введите текст!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            string result = "",
+                   input = textBoxIn.Text,
+                   key = textBoxKey.Text;
+            int SHIFT = key.Length; // Ширина таблицы всегда равна длине ключа
+            int shift = input.Length / SHIFT + (input.Length % SHIFT != 0 ? 1 : 0); // Высота таблицы
+            while (input.Length % SHIFT != 0) // Заполняем остаток таблицы пробелами
+                input += ' ';
+
+            List<Tuple<int, char, int>> gamma = new List<Tuple<int, char, int >>(); // Ключ, разбитый на символы и их порядок     
+            for (int i = 0; i < SHIFT; i++)
+                gamma.Add(Tuple.Create(i, key[i], i)); // Заполняем массив
+            gamma.Sort((a, b) => a.Item2.CompareTo(b.Item2)); // Сортируем по символу
+
+            // Собственно, шифрование
+            Button B = sender as Button;
+            if (B.Text == "Зашифровать")
+            {               
+                for (int i = 0; i < SHIFT; i++)
+                    for (int j = 0; j < shift; j++)
+                        result += input[SHIFT * j + gamma[i].Item3];        
+            }
+            else 
+            {
+                for (int i = 0; i < SHIFT; i++)
+                    gamma[i] = Tuple.Create(gamma[i].Item1, gamma[i].Item2, i); // Заполняем массив новыми номерами
+                gamma.Sort((a, b) => a.Item1.CompareTo(b.Item1)); // Сортируем по номеру после сортировки
+
+                label3.Text = "";
+                for (int i = 0; i < shift; i++)
+                    for (int j = 0; j < SHIFT; j++)
+                        result += input[gamma[j].Item3 * shift + i];
+            }
+
+            result = result.TrimEnd(); // Удаление ведущих пробелов
+            textBoxOut.Text = result;
+        }
+    }
+}
+
+
+Form1.Designer.cs
+
+namespace TranspositionCipherWithKey
+{
+    partial class Form1
+    {
+        /// <summary>
+        /// Обязательная переменная конструктора.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Освободить все используемые ресурсы.
+        /// </summary>
+        /// <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Код, автоматически созданный конструктором форм Windows
+
+        /// <summary>
+        /// Требуемый метод для поддержки конструктора — не изменяйте 
+        /// содержимое этого метода с помощью редактора кода.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.textBoxIn = new System.Windows.Forms.TextBox();
+            this.textBoxOut = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.buttonEncrypt = new System.Windows.Forms.Button();
+            this.buttonDecrypt = new System.Windows.Forms.Button();
+            this.textBoxKey = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.SuspendLayout();
+            // 
+            // textBoxIn
+            // 
+            this.textBoxIn.Location = new System.Drawing.Point(11, 90);
+            this.textBoxIn.Multiline = true;
+            this.textBoxIn.Name = "textBoxIn";
+            this.textBoxIn.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxIn.Size = new System.Drawing.Size(391, 107);
+            this.textBoxIn.TabIndex = 0;
+            // 
+            // textBoxOut
+            // 
+            this.textBoxOut.Location = new System.Drawing.Point(11, 223);
+            this.textBoxOut.Multiline = true;
+            this.textBoxOut.Name = "textBoxOut";
+            this.textBoxOut.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxOut.Size = new System.Drawing.Size(391, 107);
+            this.textBoxOut.TabIndex = 1;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(11, 74);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(32, 13);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Ввод";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(11, 207);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(40, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "Вывод";
+            // 
+            // buttonEncrypt
+            // 
+            this.buttonEncrypt.Location = new System.Drawing.Point(11, 14);
+            this.buttonEncrypt.Name = "buttonEncrypt";
+            this.buttonEncrypt.Size = new System.Drawing.Size(114, 23);
+            this.buttonEncrypt.TabIndex = 4;
+            this.buttonEncrypt.Text = "Зашифровать";
+            this.buttonEncrypt.UseVisualStyleBackColor = true;
+            this.buttonEncrypt.Click += new System.EventHandler(this.button_Click);
+            // 
+            // buttonDecrypt
+            // 
+            this.buttonDecrypt.Location = new System.Drawing.Point(11, 43);
+            this.buttonDecrypt.Name = "buttonDecrypt";
+            this.buttonDecrypt.Size = new System.Drawing.Size(114, 23);
+            this.buttonDecrypt.TabIndex = 5;
+            this.buttonDecrypt.Text = "Расшифровать";
+            this.buttonDecrypt.UseVisualStyleBackColor = true;
+            this.buttonDecrypt.Click += new System.EventHandler(this.button_Click);
+            // 
+            // textBoxKey
+            // 
+            this.textBoxKey.Location = new System.Drawing.Point(141, 30);
+            this.textBoxKey.Multiline = true;
+            this.textBoxKey.Name = "textBoxKey";
+            this.textBoxKey.Size = new System.Drawing.Size(245, 36);
+            this.textBoxKey.TabIndex = 6;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(138, 14);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(33, 13);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "Ключ";
+            // 
+            // Form1
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(413, 343);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.textBoxKey);
+            this.Controls.Add(this.buttonDecrypt);
+            this.Controls.Add(this.buttonEncrypt);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.textBoxOut);
+            this.Controls.Add(this.textBoxIn);
+            this.Name = "Form1";
+            this.Text = "Простая перестановка с ключём";
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.TextBox textBoxIn;
+        private System.Windows.Forms.TextBox textBoxOut;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button buttonEncrypt;
+        private System.Windows.Forms.Button buttonDecrypt;
+        private System.Windows.Forms.TextBox textBoxKey;
+        private System.Windows.Forms.Label label3;
+    }
+}
+
+Program.cs
+
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+
+namespace TranspositionCipherWithKey
+{
+    static class Program
+    {
+        /// <summary>
+        /// Главная точка входа для приложения.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
+        }
+    }
+}
