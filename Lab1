@@ -1,0 +1,439 @@
+Form1.cs
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+
+namespace NumeralSystem
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();     
+        }
+
+        // Проверка на правильность числа N для N-ричной система
+        private void CustomSystemBox_Leave(object sender, EventArgs e)
+        {
+            int TEMP; // Значение (это заглушка)
+            bool success = Int32.TryParse(customSystemBox.Text, out TEMP); // Успешность перевода в int
+            if (!success || TEMP < 2) // Если это не число ИЛИ оно меньше 2...
+                customSystemBox.Text = "2";
+            else if (TEMP > 36) // Если больше 36...
+                customSystemBox.Text = "36";
+        }
+
+        private const string OST = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // Символы для N-ричных систем
+
+        // Перевод из 10-ричной в N-ричную
+        private string From10toN(int num, int step) 
+        {
+            string s = "";
+            while (num>=step)
+            {
+                s += OST[num % step];
+                num /= step;
+            }
+            s += OST[num % step];
+
+            // Разворот строки
+            char[] sRev = s.ToCharArray();
+            Array.Reverse(sRev);
+            return new string(sRev);
+        }
+
+        // Перевод из N-ричной в 10-ричную
+        private int FromNto10(string sRev, int step) 
+        {
+            int num = 0;
+
+            // Разворот строки
+            char[] st = sRev.ToCharArray();
+            Array.Reverse(st);
+            string s = new string(st);
+
+            for (int i=0; i<s.Length; i++)
+            {
+                // Проверка на то, входит ли текущий символ числа в N-ричную систему
+                if (OST.IndexOf(s[i]) >= 0 && OST.IndexOf(s[i]) < step)
+                    num += (int)Math.Pow(step, i) * OST.IndexOf(s[i]);
+                else
+                    return -1; // Если число не соответствует системе, возвращаем -1
+            }
+            return num;
+        }
+
+        // Событие на нажатие любой кпонки
+        private void button_Click(object sender, EventArgs e)
+        {
+            Button b = sender as Button;
+            int numBase, NBase;
+            string s;
+
+            Int32.TryParse(customSystemBox.Text, out NBase); // N для N-ричной системы
+
+            switch (b.TabIndex) // Выбор кнопок
+            {
+                case 1:
+                    {
+                        numBase = 2;
+                        s = textBox2r.Text;
+                        break;
+                    }
+                case 3:
+                    {
+                        numBase = 8;
+                        s = textBox8r.Text;
+                        break;
+                    }
+                case 5:
+                    {
+                        numBase = 10;
+                        s = textBox10r.Text;
+                        break;
+                    }
+                case 7:
+                    {
+                        numBase = 16;
+                        s = textBox16r.Text;
+                        break;
+                    }
+                default:
+                    {
+                        numBase = NBase;
+                        s = textBoxNr.Text;                       
+                        break;
+                    }
+            }
+
+            int num = FromNto10(s, numBase);
+            if (num<0) // Если число для соответствующей кнопки не корректно (num = -1)
+            {
+                textBox2r.Text = "";
+                textBox8r.Text = "";
+                textBox10r.Text = "";
+                textBox16r.Text = "";
+                textBoxNr.Text = "";
+            }
+            else // Переводим num во все прочие системы
+            {
+                textBox2r.Text = From10toN(num, 2);
+                textBox8r.Text = From10toN(num, 8);
+                textBox10r.Text = From10toN(num, 10);
+                textBox16r.Text = From10toN(num, 16);
+                if (NBase == 0)
+                    textBoxNr.Text = "";
+                else
+                    textBoxNr.Text = From10toN(num, NBase);
+            }         
+        }
+    }
+}
+
+Form1.Designer.cs
+
+namespace NumeralSystem
+{
+    partial class Form1
+    {
+        /// <summary>
+        /// Обязательная переменная конструктора.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Освободить все используемые ресурсы.
+        /// </summary>
+        /// <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Код, автоматически созданный конструктором форм Windows
+
+        /// <summary>
+        /// Требуемый метод для поддержки конструктора — не изменяйте 
+        /// содержимое этого метода с помощью редактора кода.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.button2r = new System.Windows.Forms.Button();
+            this.textBox2r = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.textBox8r = new System.Windows.Forms.TextBox();
+            this.button8r = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textBox10r = new System.Windows.Forms.TextBox();
+            this.button10r = new System.Windows.Forms.Button();
+            this.label4 = new System.Windows.Forms.Label();
+            this.textBox16r = new System.Windows.Forms.TextBox();
+            this.button16r = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.customSystemBox = new System.Windows.Forms.TextBox();
+            this.textBoxNr = new System.Windows.Forms.TextBox();
+            this.buttonNr = new System.Windows.Forms.Button();
+            this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // button2r
+            // 
+            this.button2r.Location = new System.Drawing.Point(300, 16);
+            this.button2r.Name = "button2r";
+            this.button2r.Size = new System.Drawing.Size(75, 23);
+            this.button2r.TabIndex = 1;
+            this.button2r.Tag = "";
+            this.button2r.Text = "Перевести";
+            this.button2r.UseVisualStyleBackColor = true;
+            this.button2r.Click += new System.EventHandler(this.button_Click);
+            // 
+            // textBox2r
+            // 
+            this.textBox2r.Location = new System.Drawing.Point(98, 19);
+            this.textBox2r.MaxLength = 40;
+            this.textBox2r.Name = "textBox2r";
+            this.textBox2r.Size = new System.Drawing.Size(196, 20);
+            this.textBox2r.TabIndex = 0;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(47, 22);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(45, 13);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "2-ичная";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(41, 51);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(51, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "8-ричная";
+            // 
+            // textBox8r
+            // 
+            this.textBox8r.Location = new System.Drawing.Point(98, 48);
+            this.textBox8r.MaxLength = 40;
+            this.textBox8r.Name = "textBox8r";
+            this.textBox8r.Size = new System.Drawing.Size(196, 20);
+            this.textBox8r.TabIndex = 2;
+            // 
+            // button8r
+            // 
+            this.button8r.Location = new System.Drawing.Point(300, 46);
+            this.button8r.Name = "button8r";
+            this.button8r.Size = new System.Drawing.Size(75, 23);
+            this.button8r.TabIndex = 3;
+            this.button8r.Tag = "";
+            this.button8r.Text = "Перевести";
+            this.button8r.UseVisualStyleBackColor = true;
+            this.button8r.Click += new System.EventHandler(this.button_Click);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(35, 80);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(57, 13);
+            this.label3.TabIndex = 6;
+            this.label3.Text = "10-ричная";
+            // 
+            // textBox10r
+            // 
+            this.textBox10r.Location = new System.Drawing.Point(98, 77);
+            this.textBox10r.MaxLength = 40;
+            this.textBox10r.Name = "textBox10r";
+            this.textBox10r.Size = new System.Drawing.Size(196, 20);
+            this.textBox10r.TabIndex = 4;
+            // 
+            // button10r
+            // 
+            this.button10r.Location = new System.Drawing.Point(300, 75);
+            this.button10r.Name = "button10r";
+            this.button10r.Size = new System.Drawing.Size(75, 23);
+            this.button10r.TabIndex = 5;
+            this.button10r.Tag = "";
+            this.button10r.Text = "Перевести";
+            this.button10r.UseVisualStyleBackColor = true;
+            this.button10r.Click += new System.EventHandler(this.button_Click);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(35, 109);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(57, 13);
+            this.label4.TabIndex = 9;
+            this.label4.Text = "16-ричная";
+            // 
+            // textBox16r
+            // 
+            this.textBox16r.Location = new System.Drawing.Point(98, 106);
+            this.textBox16r.MaxLength = 40;
+            this.textBox16r.Name = "textBox16r";
+            this.textBox16r.Size = new System.Drawing.Size(196, 20);
+            this.textBox16r.TabIndex = 6;
+            // 
+            // button16r
+            // 
+            this.button16r.Location = new System.Drawing.Point(300, 104);
+            this.button16r.Name = "button16r";
+            this.button16r.Size = new System.Drawing.Size(75, 23);
+            this.button16r.TabIndex = 7;
+            this.button16r.Tag = "";
+            this.button16r.Text = "Перевести";
+            this.button16r.UseVisualStyleBackColor = true;
+            this.button16r.Click += new System.EventHandler(this.button_Click);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.textBox2r);
+            this.groupBox1.Controls.Add(this.button16r);
+            this.groupBox1.Controls.Add(this.button2r);
+            this.groupBox1.Controls.Add(this.textBox16r);
+            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.button10r);
+            this.groupBox1.Controls.Add(this.textBox8r);
+            this.groupBox1.Controls.Add(this.textBox10r);
+            this.groupBox1.Controls.Add(this.button8r);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Location = new System.Drawing.Point(12, 12);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(381, 137);
+            this.groupBox1.TabIndex = 12;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Системы исчисления";
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.label5);
+            this.groupBox2.Controls.Add(this.customSystemBox);
+            this.groupBox2.Controls.Add(this.textBoxNr);
+            this.groupBox2.Controls.Add(this.buttonNr);
+            this.groupBox2.Location = new System.Drawing.Point(12, 155);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(381, 49);
+            this.groupBox2.TabIndex = 13;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Произвольная система";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(47, 22);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(45, 13);
+            this.label5.TabIndex = 12;
+            this.label5.Text = "-ричная";
+            // 
+            // customSystemBox
+            // 
+            this.customSystemBox.Location = new System.Drawing.Point(22, 19);
+            this.customSystemBox.MaxLength = 2;
+            this.customSystemBox.Name = "customSystemBox";
+            this.customSystemBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.customSystemBox.Size = new System.Drawing.Size(24, 20);
+            this.customSystemBox.TabIndex = 8;
+            this.customSystemBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.customSystemBox.Leave += new System.EventHandler(this.CustomSystemBox_Leave);
+            // 
+            // textBoxNr
+            // 
+            this.textBoxNr.Location = new System.Drawing.Point(98, 19);
+            this.textBoxNr.MaxLength = 40;
+            this.textBoxNr.Name = "textBoxNr";
+            this.textBoxNr.Size = new System.Drawing.Size(196, 20);
+            this.textBoxNr.TabIndex = 9;
+            // 
+            // buttonNr
+            // 
+            this.buttonNr.Location = new System.Drawing.Point(300, 17);
+            this.buttonNr.Name = "buttonNr";
+            this.buttonNr.Size = new System.Drawing.Size(75, 23);
+            this.buttonNr.TabIndex = 10;
+            this.buttonNr.Tag = "";
+            this.buttonNr.Text = "Перевести";
+            this.buttonNr.UseVisualStyleBackColor = true;
+            this.buttonNr.Click += new System.EventHandler(this.button_Click);
+            // 
+            // Form1
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(405, 216);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.groupBox1);
+            this.Name = "Form1";
+            this.Text = "Конвертер";
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Button button2r;
+        private System.Windows.Forms.TextBox textBox2r;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox textBox8r;
+        private System.Windows.Forms.Button button8r;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textBox10r;
+        private System.Windows.Forms.Button button10r;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox textBox16r;
+        private System.Windows.Forms.Button button16r;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.TextBox textBoxNr;
+        private System.Windows.Forms.Button buttonNr;
+        private System.Windows.Forms.TextBox customSystemBox;
+        private System.Windows.Forms.Label label5;
+    }
+}
+
+Program.cs
+
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+
+namespace NumeralSystem
+{
+    static class Program
+    {
+        /// <summary>
+        /// Главная точка входа для приложения.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
+        }
+    }
+}
+
